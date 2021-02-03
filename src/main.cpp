@@ -1,6 +1,10 @@
 #include "main.h"
 #include "pros/apix.h"								// we need the advanced API header
 
+#include <iostream>
+#include <fstream>
+
+// See pros/src/system/dev/ser_driver.c for definitions
 #define STDIN_STREAM_ID 0x706e6973   // 'sinp' little endian
 #define STDOUT_STREAM_ID 0x74756f73  // 'sout' little endian
 #define STDERR_STREAM_ID 0x72726573  // 'serr' little endian
@@ -9,7 +13,20 @@
 int portID = STDOUT_STREAM_ID;			// what serial port are we going to set
 																		// options for?
 
+std::string messageString;
 
+void messageRxTask(void* ignore) {
+	 //the void* is there to provide a way to pass a
+
+	std::cout << "V5: Starting Message Receive Task \n";
+
+  // Task loop make sure you do not starve the processor
+	while(true) {
+ 		 std::getline(std::cin, messageString);
+		 std::cout << "V5: Got line: " << messageString << "\n";
+		 pros::delay(20);  // run a 50HZ
+	}
+}
 
 /**
  * Runs initialization code. This occurs as soon as the program is started.
@@ -72,12 +89,22 @@ void autonomous() {}
  * task, not resume it from where it left off.
  */
 void opcontrol() {
+  // start he message recieve task, so we can receive data from the RPI Zero via the serial
+	// interface.  This task runs at 20ms interval - or 50HZ
+	pros::Task messageRecieveTask(messageRxTask, (void*)"PROS", TASK_PRIORITY_DEFAULT,
+                TASK_STACK_DEPTH_DEFAULT, "Message Receiver Task"); //starts the task
+	// no need to provide any other parameters
 
+	std::string mystr;
+  // activate write mode by sending over the keyword
+  std::cout << "writemode" << "\n";
+  int counter = 0;
 
 	while (true) {
-		std::cout << "Writing to serial Console \n";
-		pros::delay(200);
-		std::cout << "Hello via websockets interface \n";
-		pros::delay(200);
+		/// Write a messagge to the RPI Zero
+    // message MSUT end with a '\n' in order to transmit
+    std::cout << "V5: writing loop - counter: " << counter++ << "\n";
+
+		pros::delay(500);   // write message for now at 2HZ
 	}
 }
