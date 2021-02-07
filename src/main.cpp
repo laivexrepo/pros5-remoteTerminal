@@ -1,9 +1,12 @@
 #include "main.h"
 #include "pros/apix.h"								// we need the advanced API header
 
+#include "json.hpp"										// JSON parsing library for C++
+
 #include <iostream>
 #include <fstream>
 
+// ----------------------- Configure serial console driver ---------------------
 // See pros/src/system/dev/ser_driver.c for definitions
 #define STDIN_STREAM_ID 0x706e6973   // 'sinp' little endian
 #define STDOUT_STREAM_ID 0x74756f73  // 'sout' little endian
@@ -12,9 +15,13 @@
 
 int portID = STDOUT_STREAM_ID;			// what serial port are we going to set
 																		// options for?
+// --------------------- END serial driver configuration -----------------------
 
 std::string messageString;
 
+using json = nlohmann::json;				// set JSON name space for use
+
+// -------------------- Define thread/task functions ---------------------------
 void messageRxTask(void* ignore) {
 	 //the void* is there to provide a way to pass a
 
@@ -27,6 +34,8 @@ void messageRxTask(void* ignore) {
 		 pros::delay(20);  // run a 50HZ
 	}
 }
+
+// ---------------- END trhead defintions --------------------------------------
 
 /**
  * Runs initialization code. This occurs as soon as the program is started.
@@ -95,6 +104,15 @@ void opcontrol() {
                 TASK_STACK_DEPTH_DEFAULT, "Message Receiver Task"); //starts the task
 	// no need to provide any other parameters
 
+  // ------------------ JSON testing code --------------------------------------
+	json message;											// declare a json object message
+	message["pi"]=3.141;
+	message["happy"] = true;
+	message["name"] = "willem";
+	message["nothing"] = nullptr;
+  message["answer"]["everything"] = 42;
+  // ---------------- END JSON test defenition ---------------------------------
+
 	std::string mystr;
   // activate write mode by sending over the keyword
   std::cout << "writemode" << "\n";
@@ -104,6 +122,11 @@ void opcontrol() {
 		/// Write a messagge to the RPI Zero
     // message MSUT end with a '\n' in order to transmit
     std::cout << "V5: writing loop - counter: " << counter++ << "\n";
+
+    // ------------------------ Write serialized JSON object to console --------
+    // write JSON object to cout - serialized
+    std::cout << message << "\n";
+    // ------------------------ END serialized JSON write ----------------------
 
 		pros::delay(500);   // write message for now at 2HZ
 	}
