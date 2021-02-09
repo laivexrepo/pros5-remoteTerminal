@@ -125,7 +125,7 @@ void opcontrol() {
 
     // ------------------------ Write serialized JSON object to console --------
     // write JSON object to cout - serialized
-    std::cout << message << "\n";
+    std::cout << "JSON" << message << "\n";
     // ------------------------ END serialized JSON write ----------------------
 
 		pros::delay(500);   // write message for now at 2HZ
