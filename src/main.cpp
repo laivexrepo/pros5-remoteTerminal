@@ -16,6 +16,7 @@
 int portID = STDOUT_STREAM_ID;			// what serial port are we going to set
 																		// options for?
 // --------------------- END serial driver configuration -----------------------
+pros::task_t rx = (pros::task_t)NULL;
 
 std::string messageString;
 
@@ -35,6 +36,14 @@ void messageRxTask(void* ignore) {
 	}
 }
 
+void killTasks() {
+	// ability to kill running tasks // takss shoudl in general be killed between
+	// competition stage state changes
+	if(rx) {
+  	pros::Task(rx).remove();
+	  rx = (pros::task_t)NULL;
+  }
+}
 // ---------------- END trhead defintions --------------------------------------
 
 /**
@@ -58,7 +67,9 @@ void initialize() {
  * the VEX Competition Switch, following either autonomous or opcontrol. When
  * the robot is enabled, this task will exit.
  */
-void disabled() {}
+void disabled() {
+	killTasks();			// Make sure we got no lingering tasks around
+}
 
 /**
  * Runs after initialize(), and before autonomous when connected to the Field
@@ -69,7 +80,9 @@ void disabled() {}
  * This task will exit when the robot is enabled and autonomous or opcontrol
  * starts.
  */
-void competition_initialize() {}
+void competition_initialize() {
+	killTasks();			// Make sure we got no lingering tasks around
+}
 
 /**
  * Runs the user autonomous code. This function will be started in its own task
@@ -82,7 +95,9 @@ void competition_initialize() {}
  * will be stopped. Re-enabling the robot will restart the task, not re-start it
  * from where it left off.
  */
-void autonomous() {}
+void autonomous() {
+	killTasks();			// Make sure we got no lingering tasks around
+}
 
 /**
  * Runs the operator control code. This function will be started in its own task
@@ -98,9 +113,11 @@ void autonomous() {}
  * task, not resume it from where it left off.
  */
 void opcontrol() {
+	killTasks();			// Make sure we got no lingering tasks around
+
   // start he message recieve task, so we can receive data from the RPI Zero via the serial
 	// interface.  This task runs at 20ms interval - or 50HZ
-	pros::Task messageRecieveTask(messageRxTask, (void*)"PROS", TASK_PRIORITY_DEFAULT,
+	rx = pros::Task (messageRxTask, (void*)"PROS", TASK_PRIORITY_DEFAULT,
                 TASK_STACK_DEPTH_DEFAULT, "Message Receiver Task"); //starts the task
 	// no need to provide any other parameters
 
